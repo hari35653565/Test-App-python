@@ -3,10 +3,15 @@ If you already have the repository cloned locally
 
 
 git remote remove origin
+
 git remote add origin https://[TOKEN]@github.com/[REPO-OWNER]/[REPO-NAME]
+
 git push
+
 If you are cloning a new repository
+
 git clone https://[TOKEN]@github.com/[REPO-OWNER]/[REPO-NAME]
+
 git push origin --delete main
 
 
