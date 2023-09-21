@@ -15,11 +15,11 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
     timeout-minutes: 15  # Adjust the timeout as needed
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2  # Use v2 for faster checkout
-    
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
@@ -30,3 +30,7 @@ jobs:
       uses: github/codeql-action/analyze@v2
       with:
         category: "/language:python"  # Specify the language directly
+
+    # Additional steps can be added here as needed for your workflow.
+
+    # No need to explicitly use the GITHUB_TOKEN as it's automatically provided by GitHub
