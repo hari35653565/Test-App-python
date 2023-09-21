@@ -2,35 +2,47 @@ name: "CodeQL"
 
 on:
   push:
-    branches:
-      - "master"
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - "master"
+    # The branches below must be a subset of the branches above
+    branches: [ "master" ]
   schedule:
-    - cron: '18 17 * * 0'
+    - cron: '39 7 * * 0'
 
 jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # Adjust the timeout as needed
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python' ]
+      
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2  # Use v2 for faster checkout
+      uses: actions/checkout@v3
 
+    # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
-        languages: python  # Specify the language directly if you're only analyzing Python code
-        queries: security-and-quality  # Use a predefined query pack for common checks
+        languages: ${{ matrix.language }}
+      
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+    # - run: |
+    #     echo "Run, Build Application using script"
+    #     ./location_of_script_within_repo/buildscript.sh
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
       with:
-        category: "/language:python"  # Specify the language directly
-
-    # Additional steps can be added here as needed for your workflow.
-
-    # No need to explicitly use the GITHUB_TOKEN as it's automatically provided by GitHub
+        category: "/language:${{matrix.language}}"
