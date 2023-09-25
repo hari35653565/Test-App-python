@@ -31,14 +31,13 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           
       - name: Run SonarScanner    
-        run: |
-          # Replace these variables with your actual values
-          PROJECT_KEY="new-python"
-          PROJECT_NAME="new-python"
-          SCANNER_HOME="/var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner"
+        env: 
+          PROJECT_KEY: "new-python"
+          PROJECT_NAME: "new-python"
+          SCANNER_HOME: "/var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner"
           
-          # Run the SonarScanner command
+        run: |
           $SCANNER_HOME/bin/sonar-scanner \
             -Dsonar.projectKey="$PROJECT_KEY" \
             -Dsonar.projectName="$PROJECT_NAME"
-            # Add any additional SonarScanner options here
+           
