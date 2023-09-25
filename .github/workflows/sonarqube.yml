@@ -10,6 +10,44 @@ permissions:
   pull-requests: read # allows SonarQube to decorate PRs with analysis results
 
 jobs:
+  increment-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Increment version
+        id: increment
+        run: |
+          # Get the latest tag
+          latest_tag=$(git describe --tags --abbrev=0)
+
+          # Extract the version number (e.g., "1.1.1" from "v.1.1.1")
+          current_version="${latest_tag#v}"
+
+          # Split the version into its parts (major, minor, and patch)
+          IFS='.' read -ra version_parts <<< "$current_version"
+          major="${version_parts[0]}"
+          minor="${version_parts[1]}"
+          patch="${version_parts[2]}"
+
+          # Increment the patch version
+          ((patch++))
+
+          # Create the new version string
+          new_version="${major}.${minor}.${patch}"
+
+          # Print the new version
+          echo "New version: $new_version"
+
+          # Set the output variable for later use
+          echo "::set-output name=new_version::$new_version"
+
+          # Create and push the new tag
+          new_tag="v.${new_version}"
+          git tag "$new_tag"
+          git push origin "$new_tag"
   Analysis:
     runs-on: ubuntu-latest
 
