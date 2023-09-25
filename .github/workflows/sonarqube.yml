@@ -1,6 +1,3 @@
-Certainly, here's a modified GitHub Actions workflow that increments the patch version based on the latest tag in your repository. It also creates a new tag and pushes it to the remote repository. If there are no existing tags, it initializes the version as "1.0.0" by default.
-
-```yaml
 name: "CodeQL"
 
 on:
@@ -88,15 +85,3 @@ jobs:
         uses: github/codeql-action/analyze@v2
         with:
           category: "/languages:${{ matrix.language }}"
-```
-
-This workflow performs the following steps:
-
-1. Checks out your code.
-2. Determines the latest tag in your repository or sets an initial version (e.g., "1.0.0" if no tags exist).
-3. Increments the patch version.
-4. Prints the new version and sets it as an output variable.
-5. Creates a new tag with the updated version and pushes it to the remote repository.
-6. Initializes CodeQL and runs the analysis as you originally intended.
-
-Please make sure to adjust the language and any additional steps as needed for your specific project.
