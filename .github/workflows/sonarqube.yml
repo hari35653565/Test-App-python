@@ -25,7 +25,7 @@ jobs:
           # Get the latest tag if it exists, or set it to an initial version
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
           
-          # Extract the version number (e.g., "1.1.1" from "v.1.1.1")
+          # Extract the version number (e.g., "1.1.1" from "v1.1.1")
           current_version="${latest_tag#v}"
           
           # Split the version into its parts (major, minor, and patch)
@@ -47,7 +47,7 @@ jobs:
           echo "::set-output name=new_version::$new_version"
           
           # Create and push the new tag
-          new_tag="v.${new_version}"
+          new_tag="v${new_version}"
           git tag "$new_tag"
           git push origin "$new_tag"
 
@@ -77,11 +77,16 @@ jobs:
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
 
-      # - run: |
-      #     echo "Run, Build Application using script"
-      #     ./location_of_script_within_repo/buildscript.sh
-
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
         with:
           category: "/languages:${{ matrix.language }}"
+
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: Email notification on build failure
+        run: |
+          echo "The build has failed. Please check the workflow for details." | mail -s "Build Failed" haritha.guduru@gytworkz.com
