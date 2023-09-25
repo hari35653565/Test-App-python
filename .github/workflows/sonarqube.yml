@@ -1,13 +1,18 @@
-name: SonarQube analysis
+Certainly, here's a modified GitHub Actions workflow that increments the patch version based on the latest tag in your repository. It also creates a new tag and pushes it to the remote repository. If there are no existing tags, it initializes the version as "1.0.0" by default.
+
+```yaml
+name: "CodeQL"
 
 on:
   push:
     branches:
       - "master"
+  pull_request:
+    branches:
+      - "master"
+  schedule:
+    - cron: '39 7 * * 0'
   workflow_dispatch:
-
-permissions:
-  pull-requests: read # allows SonarQube to decorate PRs with analysis results
 
 jobs:
   increment-version:
@@ -18,64 +23,80 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Increment version
-        id: increment
+        id: version
         run: |
-          # Get the latest tag
-          latest_tag=$(git describe --tags --abbrev=0)
-
+          # Get the latest tag if it exists, or set it to an initial version
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          
           # Extract the version number (e.g., "1.1.1" from "v.1.1.1")
           current_version="${latest_tag#v}"
-
+          
           # Split the version into its parts (major, minor, and patch)
           IFS='.' read -ra version_parts <<< "$current_version"
           major="${version_parts[0]}"
           minor="${version_parts[1]}"
           patch="${version_parts[2]}"
-
+          
           # Increment the patch version
           ((patch++))
-
+          
           # Create the new version string
           new_version="${major}.${minor}.${patch}"
-
+          
           # Print the new version
           echo "New version: $new_version"
-
+          
           # Set the output variable for later use
           echo "::set-output name=new_version::$new_version"
-
+          
           # Create and push the new tag
           new_tag="v.${new_version}"
           git tag "$new_tag"
           git push origin "$new_tag"
-  Analysis:
+
+  analyze:
+    name: Analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python']
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Setup Java
-        uses: actions/setup-java@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
         with:
-          java-version: '17' # You can specify the Java version required by SonarQube
-          distribution: 'adopt' # Specify the Java distribution you want to use
+          languages: ${{ matrix.language }}
 
-      - name: Authenticate
-        uses: SonarSource/sonarqube-scan-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          
-      - name: Run SonarScanner    
-        env: 
-          PROJECT_KEY: "new-python"
-          PROJECT_NAME: "new-python"
-          SCANNER_HOME: "/var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner"
-          
-        run: |
-          $SCANNER_HOME/bin/sonar-scanner \
-            -Dsonar.projectKey="$PROJECT_KEY" \
-            -Dsonar.projectName="$PROJECT_NAME"
-           
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      # - run: |
+      #     echo "Run, Build Application using script"
+      #     ./location_of_script_within_repo/buildscript.sh
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/languages:${{ matrix.language }}"
+```
+
+This workflow performs the following steps:
+
+1. Checks out your code.
+2. Determines the latest tag in your repository or sets an initial version (e.g., "1.0.0" if no tags exist).
+3. Increments the patch version.
+4. Prints the new version and sets it as an output variable.
+5. Creates a new tag with the updated version and pushes it to the remote repository.
+6. Initializes CodeQL and runs the analysis as you originally intended.
+
+Please make sure to adjust the language and any additional steps as needed for your specific project.
