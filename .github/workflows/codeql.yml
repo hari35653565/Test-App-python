@@ -2,51 +2,15 @@ name: "CodeQL"
 
 on:
   push:
-    branches:
-      - "master"
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - "master"
+    # The branches below must be a subset of the branches above
+    branches: [ "master" ]
   schedule:
     - cron: '39 7 * * 0'
-  workflow_dispatch:
+  workflow_dispatch: 
 
 jobs:
-  increment-version:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Increment version
-        run: |
-          # Get the latest tag
-          latest_tag=$(git describe --tags --abbrev=0)
-
-          # Extract the version number (e.g., "1.1.1" from "v.1.1.1")
-          current_version="${latest_tag#v}"
-
-          # Split the version into its parts (major, minor, and patch)
-          IFS='.' read -ra version_parts <<< "$current_version"
-          major="${version_parts[0]}"
-          minor="${version_parts[1]}"
-          patch="${version_parts[2]}"
-
-          # Increment the patch version
-          ((patch++))
-
-          # Create the new version string
-          new_version="${major}.${minor}.${patch}"
-
-          # Print the new version
-          echo "New version: $new_version"
-
-          # Create and push the new tag
-          new_tag="v.${new_version}"
-          git tag "$new_tag"
-          git push origin "$new_tag"
-
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
@@ -59,26 +23,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['python']
+        language: [ 'python' ]
+      
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2  # Use v2 for consistency
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: ${{ matrix.language }}
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+      
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+    # - run: |
+    #     echo "Run, Build Application using script"
+    #     ./location_of_script_within_repo/buildscript.sh
 
-      # - run: |
-      #     echo "Run, Build Application using script"
-      #     ./location_of_script_within_repo/buildscript.sh
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          # Use "/languages" instead of "/language"
-          category: "/languages:${{ matrix.language }}"
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
